@@ -125,12 +125,12 @@ int main(int argc, const char * argv[])
             goto exit;
         }
         
-//        NSRect sourceRect = NSMakeRect(0,0,icon.size.width,icon.size.height);
+//      NSRect sourceRect = NSMakeRect(0,0,icon.size.width,icon.size.height);
 
         // write the target NSImage to the output-file-prefix specified
         for( NSString* sizeString in outputSizes)
         {
-            // TODO check for 123x123 or 123% and scale appropriatly
+            // TODO check for 123x123 or 123% and scale appropriatlyz
             CGFloat size = [sizeString doubleValue];
             
             if( size > 10000) // proposed image is very very large, bigger than any current display
