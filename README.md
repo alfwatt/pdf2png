@@ -21,7 +21,7 @@ with presets for rendering icons for iOS, MacOS and Android
            - android-small: -s 36.48,72
            - android-large: -s 96,144,192
 
-#example
+## example
 
 You have a logo for an application app-logo.pdf which you need to render for iOS and Android:
 
