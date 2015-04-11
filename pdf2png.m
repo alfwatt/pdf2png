@@ -72,6 +72,19 @@ int main(int argc, const char * argv[])
                             @"32",      // small
                             @"16"];     // small
         }
+        if( [target isEqualToString:@"macos-small"])
+        {
+            retina = @"YES";
+            targetSizes = @[@"32",      // small
+                            @"16"];     // small
+        }
+        if( [target isEqualToString:@"macos-large"])
+        {
+            retina = @"YES";
+            targetSizes = @[@"512",
+                            @"256",
+                            @"128"];
+        }
         else if( [target isEqualToString:@"ios"])
         {
             retina = @"YES";
@@ -84,6 +97,23 @@ int main(int argc, const char * argv[])
                             @"40",      // Spotlight small
                             @"29"];     // Settings small
         }
+        else if( [target isEqualToString:@"ios-small"])
+        {
+            retina = @"YES";
+            targetSizes = @[@"50",      // Spotlight small
+                            @"40",      // Spotlight small
+                            @"29",      // Settings small
+                            @"72"];     // iPad iOS 6
+
+        }
+        else if( [target isEqualToString:@"ios-large"])
+        {
+            retina = @"YES";
+            targetSizes = @[@"512",     // iTunes store @2X
+                            @"120",     // iPhone iOS 7
+                            @"76"];     // iPad iOS 7
+
+        }
         else if( [target isEqualToString:@"android"])
         {
             targetSizes = @[@"512",     // Google Play
@@ -94,7 +124,20 @@ int main(int argc, const char * argv[])
                             @"48",      // mdpi small
                             @"36"];     // ldpi small
         }
-        
+        else if( [target isEqualToString:@"android-small"])
+        {
+            targetSizes = @[@"72",      // hdpi
+                            @"48",      // mdpi small
+                            @"36"];     // ldpi small
+        }
+        else if( [target isEqualToString:@"android-large"])
+        {
+            targetSizes = @[@"512",     // Google Play
+                            @"192",     // xxxhdpi
+                            @"144",     // xxhdpi
+                            @"96"];      // xhdpi
+        }
+
         // combine the output and target sizes
         if( outputSizes && targetSizes)
         {
