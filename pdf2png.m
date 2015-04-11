@@ -17,13 +17,13 @@
 - (BOOL)writePNGToURL:(NSURL*)URL outputSizeInPixels:(NSSize)outputSizePx error:(NSError*__autoreleasing*)error
 {
     BOOL result = YES;
-    NSImage* scalingImage = [NSImage imageWithSize:[self size] flipped:[self isFlipped] drawingHandler:^BOOL(NSRect dstRect) {
+    NSImage* scalingImage = [NSImage imageWithSize:self.size flipped:NO drawingHandler:^BOOL(NSRect dstRect) {
         [self drawAtPoint:NSMakePoint(0.0, 0.0) fromRect:dstRect operation:NSCompositeSourceOver fraction:1.0];
         return YES;
     }];
     NSRect proposedRect = NSMakeRect(0.0, 0.0, outputSizePx.width, outputSizePx.height);
     CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-    CGContextRef cgContext = CGBitmapContextCreate(NULL, proposedRect.size.width, proposedRect.size.height, 8, 4*proposedRect.size.width, colorSpace, kCGImageAlphaPremultipliedLast);
+    CGContextRef cgContext = CGBitmapContextCreate(NULL, proposedRect.size.width, proposedRect.size.height, 8, 4*proposedRect.size.width, colorSpace, kCGBitmapByteOrderDefault);
     CGColorSpaceRelease(colorSpace);
     NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:NO];
     CGContextRelease(cgContext);
@@ -130,19 +130,31 @@ int main(int argc, const char * argv[])
         // write the target NSImage to the output-file-prefix specified
         for( NSString* sizeString in outputSizes)
         {
+            NSSize iconSize;
+
             // TODO check for 123x123 or 123% and scale appropriatlyz
-            CGFloat size = [sizeString doubleValue];
-            
-            if( size > 10000) // proposed image is very very large, bigger than any current display
+            NSArray* sizeArray = [sizeString componentsSeparatedByString:@"x"];
+            if( sizeArray.count == 2 )// widthxheight
             {
-                NSLog(@"ERROR: I'm sorry, Dave, I'm afraid I can't do that.");
-                goto exit;
+                CGFloat width = [sizeArray[0] doubleValue];
+                CGFloat height = [sizeArray[1] doubleValue];
+                iconSize = NSMakeSize( width, height);
+            }
+            else // it's square
+            {
+                CGFloat size = [sizeString doubleValue];
+                iconSize = NSMakeSize(size, size);
             }
             
-            NSSize iconSize = NSMakeSize(size,size);
-            
+            if( iconSize.width < 1 || iconSize.height < 1 // proposed image is less than one pixel in either dimension
+             || iconSize.width > 10000 || iconSize.height > 10000) // proposed image is very very large, bigger than any current display
+            {
+                NSLog(@"ERROR: Invalid image size: %@ -> %@", sizeString, NSStringFromSize(iconSize));
+                goto exit;
+            }
+
             NSError* error = nil;
-            NSURL* outputFileURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"./%@_%.0fx%.0f.png",outputFilePrefix,size,size]];
+            NSURL* outputFileURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"./%@_%.0fx%.0f.png",outputFilePrefix,iconSize.width,iconSize.height]];
             [icon writePNGToURL:outputFileURL outputSizeInPixels:iconSize error:&error];
             
             if( error) NSLog(@"ERROR: %@ writing: %@", error, outputFileURL);
@@ -152,8 +164,8 @@ int main(int argc, const char * argv[])
             
             if( retina)
             {
-                NSSize retinaSize = NSMakeSize(size*2,size*2);
-                NSURL* retinaFileURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"./%@_%.0fx%.0f@2x.png",outputFilePrefix,size,size]];
+                NSSize retinaSize = NSMakeSize(iconSize.width*2,iconSize.height*2);
+                NSURL* retinaFileURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"./%@_%.0fx%.0f@2x.png",outputFilePrefix,iconSize.width,iconSize.height]];
                 [icon writePNGToURL:retinaFileURL outputSizeInPixels:retinaSize error:&error];
                 
                 if( error) NSLog(@"ERROR: %@ writing: %@", error, retinaFileURL);
