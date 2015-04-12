@@ -135,7 +135,7 @@ int main(int argc, const char * argv[])
             targetSizes = @[@"512",     // Google Play
                             @"192",     // xxxhdpi
                             @"144",     // xxhdpi
-                            @"96"];      // xhdpi
+                            @"96"];     // xhdpi
         }
 
         // combine the output and target sizes
