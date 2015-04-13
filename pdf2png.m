@@ -23,7 +23,7 @@
     }];
     NSRect proposedRect = NSMakeRect(0.0, 0.0, outputSizePx.width, outputSizePx.height);
     CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-    CGContextRef cgContext = CGBitmapContextCreate(NULL, proposedRect.size.width, proposedRect.size.height, 8, 4*proposedRect.size.width, colorSpace, kCGBitmapByteOrderDefault);
+    CGContextRef cgContext = CGBitmapContextCreate(NULL, proposedRect.size.width, proposedRect.size.height, 8, 4*proposedRect.size.width, colorSpace, kCGBitmapAlphaInfoMask & kCGImageAlphaPremultipliedFirst);
     CGColorSpaceRelease(colorSpace);
     NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:NO];
     CGContextRelease(cgContext);
@@ -57,15 +57,15 @@ int main(int argc, const char * argv[])
         NSString* inputFileName = [args objectForKey:@"i"];
         NSString* outputFilePrefix = [args objectForKey:@"o"];
         NSString* target = [args objectForKey:@"t"];
-        NSString* retina = [args objectForKey:@"R"];
         NSArray* outputSizes = [[args objectForKey:@"s"] componentsSeparatedByString:@","];
+        NSArray* retinaSizes = [[args objectForKey:@"R"] componentsSeparatedByString:@","];
         NSArray* targetSizes = nil;
         
         // ios or android target sizes
 
         if( [target isEqualToString:@"macos"])
         {
-            retina = @"YES";
+            retinaSizes = @[@"2"];
             targetSizes = @[@"512",
                             @"256",
                             @"128",
@@ -74,20 +74,20 @@ int main(int argc, const char * argv[])
         }
         if( [target isEqualToString:@"macos-small"])
         {
-            retina = @"YES";
+            retinaSizes = @[@"2"];
             targetSizes = @[@"32",      // small
                             @"16"];     // small
         }
         if( [target isEqualToString:@"macos-large"])
         {
-            retina = @"YES";
+            retinaSizes = @[@"2"];
             targetSizes = @[@"512",
                             @"256",
                             @"128"];
         }
         else if( [target isEqualToString:@"ios"])
         {
-            retina = @"YES";
+            retinaSizes = @[@"2"];
             targetSizes = @[@"512",     // iTunes store @2X
                             @"120",     // iPhone iOS 7
                             @"76",      // iPad iOS 7
@@ -99,7 +99,7 @@ int main(int argc, const char * argv[])
         }
         else if( [target isEqualToString:@"ios-small"])
         {
-            retina = @"YES";
+            retinaSizes = @[@"2"];
             targetSizes = @[@"50",      // Spotlight small
                             @"40",      // Spotlight small
                             @"29",      // Settings small
@@ -108,11 +108,19 @@ int main(int argc, const char * argv[])
         }
         else if( [target isEqualToString:@"ios-large"])
         {
-            retina = @"YES";
+            retinaSizes = @[@"2"];
             targetSizes = @[@"512",     // iTunes store @2X
                             @"120",     // iPhone iOS 7
                             @"76"];     // iPad iOS 7
 
+        }
+        else if( [target isEqualToString:@"ios8"])
+        {
+            retinaSizes = @[@"2",@"3"];
+            targetSizes = @[@"76",      // iPad App
+                            @"60",      // iPhone App
+                            @"40",      // Spotlight small
+                            @"29"];     // Settings small
         }
         else if( [target isEqualToString:@"android"])
         {
@@ -205,14 +213,18 @@ int main(int argc, const char * argv[])
 
             // now write the retina images if requested
             
-            if( retina)
+            if( retinaSizes)
             {
-                NSSize retinaSize = NSMakeSize(iconSize.width*2,iconSize.height*2);
-                NSURL* retinaFileURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"./%@_%.0fx%.0f@2x.png",outputFilePrefix,iconSize.width,iconSize.height]];
-                [icon writePNGToURL:retinaFileURL outputSizeInPixels:retinaSize error:&error];
-                
-                if( error) NSLog(@"ERROR: %@ writing: %@", error, retinaFileURL);
-                else NSLog(@"wrote: %@", retinaFileURL);
+                for( NSString* multiple in retinaSizes)
+                {
+                    CGFloat scale = [multiple doubleValue];
+                    NSSize retinaSize = NSMakeSize(iconSize.width*scale,iconSize.height*scale);
+                    NSURL* retinaFileURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"./%@_%.0fx%.0f@%.0fx.png",outputFilePrefix,iconSize.width,iconSize.height,scale]];
+                    [icon writePNGToURL:retinaFileURL outputSizeInPixels:retinaSize error:&error];
+                    
+                    if( error) NSLog(@"ERROR: %@ writing: %@", error, retinaFileURL);
+                    else NSLog(@"wrote: %@", retinaFileURL);
+                }
             }
             
         }

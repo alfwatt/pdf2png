@@ -5,18 +5,19 @@ with presets for rendering icons for iOS, MacOS and Android
 
 ## usage
 
-    pdf2png -i <input.pdf> -o <output-file-prefix> -s 10,20x40,40x20 -R 1 -t <target>
+    pdf2png -i <input.pdf> -o <output-file-prefix> -s 10,20x40,40x20 -R 2 -t <target>
         -i - input file name, a PDF
         -o - output file prefix, to which the size and .png will be appended
         -s - a comma seperated array of output sizes
         -R - generate retina versions of the image @2x
         -t - a target platform: macos, ios or android
-           - macos:         -s 16,32,128,256,512 -R 1
-           - macos-small:   -s 16,32 -R 1
-           - macos-large:   -s 128,256,512 -R 1
-           - ios:           -s 29,40,50,57,72,76,120 -R 1
-           - ios-small:     -s 29,40,50,57 -R 1
-           - ios-large:     -s 72,76,120 -R 1
+           - macos:         -s 16,32,128,256,512 -R 2
+           - macos-small:   -s 16,32 -R 2
+           - macos-large:   -s 128,256,512 -R 2
+           - ios:           -s 29,40,50,57,72,76 -R 2
+           - ios-small:     -s 29,40,50,57 -R 2
+           - ios-large:     -s 72,76,120 -R 2
+           - ios8:          -s 29,40,60,76 -R 2,3
            - android:       -s 36.48,72,96,144,192
            - android-small: -s 36.48,72
            - android-large: -s 96,144,192
