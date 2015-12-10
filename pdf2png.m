@@ -4,6 +4,8 @@
 
 #pragma mark -
 
+/* http://stackoverflow.com/questions/17507170/how-to-save-png-file-from-nsimage-retina-issues */
+
 @interface NSImage (SSWPNGAdditions)
 
 - (BOOL)writePNGToURL:(NSURL*)URL outputSizeInPixels:(NSSize)outputSizePx error:(NSError*__autoreleasing*)error;
@@ -158,7 +160,8 @@ int main(int argc, const char * argv[])
         
         if( !inputFileName || !outputFilePrefix || !outputSizes)
         {
-            NSLog(@"usage: pdf2png -i <input.pdf> -o <output-file-prefix> -s 10,20,30,40 -t macos|ios|android -R 1");
+            NSFileHandle* stdout = [NSFileHandle fileHandleWithStandardOutput];
+            [stdout writeData:[@"usage: pdf2png -i <input.pdf> -o <output-file-prefix> -s 10,20,30,40 -t macos|ios|android -R 1\n" dataUsingEncoding:NSUTF8StringEncoding]];
             goto exit;
         }
                 
