@@ -47,11 +47,22 @@
 
 #pragma mark -
 
+enum {
+    StatusSuccess = 0,
+    StatusInvalidTargetName,
+    StatusMissingArguments,
+    StatusInputFileNotFound,
+    StatusInputFileNotAnImage,
+    StatusOutputSizeInvalid,
+    StatusOutputWriteError
+};
+
 int main(int argc, const char * argv[])
 {
-    int status = 0;
+    int status = StatusSuccess;
     @autoreleasepool
     {
+        NSFileHandle* stdout = [NSFileHandle fileHandleWithStandardOutput];
         NSDictionary* args = [[NSUserDefaults standardUserDefaults] volatileDomainForName:NSArgumentDomain];
 //        NSLog(@"args: %@", args);
         
@@ -60,96 +71,81 @@ int main(int argc, const char * argv[])
         NSString* outputFilePrefix = [args objectForKey:@"o"];
         NSString* target = [args objectForKey:@"t"];
         NSArray* outputSizes = [[args objectForKey:@"s"] componentsSeparatedByString:@","];
-        NSArray* retinaSizes = [[args objectForKey:@"R"] componentsSeparatedByString:@","];
+
+        NSDictionary* const targets = @{
+            @"macos": @[
+                @"16", @"16@2x",
+                @"32", @"32@2x",
+                @"128", @"128@2x",
+                @"256", @"256@2x",
+                @"512", @"512@2x"
+            ],
+            @"macos-small": @[
+                @"16", @"16@2x",
+                @"32", @"32@2x"
+            ],
+            @"macos-large": @[
+                @"128", @"128@2x",
+                @"256", @"256@2x",
+                @"512", @"512@2x"
+            ],
+
+            @"ios": @[
+                @"29", @"29@2x",            // iPad Settings
+                @"40", @"40@2x",            // iPad Spotlight
+                @"76", @"76@2x",            // iPad App
+                @"83.5@2x",                 // iPad Pro
+                @"60@2x", @"60@3x",         // iPhone App
+                @"29@3x",                   // iPhone Settings
+                @"40@3x",                   // iPhone Spotlight
+                @"512"                      // iTunes Store
+            ],
+            @"ios-small": @[
+                @"29", @"29@2x", @"29@3x",  // Settings
+                @"40", @"40@2x", @"40@3x"   // Spotlight
+            ],
+            @"ios-large": @[
+                @"76", @"76@2x",            // iPad App
+                @"83.5@2x",                 // iPad Pro
+                @"60@2x", @"60@3x",         // iPhone App
+                @"512"                      // iTunes Store
+            ],
+
+            @"android": @[
+                @"512",     // Google Play
+                @"192",     // xxxhdpi
+                @"144",     // xxhdpi
+                @"96",      // xhdpi
+                @"72",      // hdpi
+                @"48",      // mdpi small
+                @"36"       // ldpi small
+            ],
+            @"android-small": @[
+                @"72",      // hdpi
+                @"48",      // mdpi small
+                @"36"       // ldpi small
+            ],
+            @"android-large": @[
+                @"512",     // Google Play
+                @"192",     // xxxhdpi
+                @"144",     // xxhdpi
+                @"96"       // xhdpi
+            ]
+        };
+
         NSArray* targetSizes = nil;
-        
-        // ios or android target sizes
+        if( target) {
+            if( [targets objectForKey:target] != nil) {
 
-        if( [target isEqualToString:@"macos"])
-        {
-            retinaSizes = @[@"2"];
-            targetSizes = @[@"512",
-                            @"256",
-                            @"128",
-                            @"32",      // small
-                            @"16"];     // small
-        }
-        if( [target isEqualToString:@"macos-small"])
-        {
-            retinaSizes = @[@"2"];
-            targetSizes = @[@"32",      // small
-                            @"16"];     // small
-        }
-        if( [target isEqualToString:@"macos-large"])
-        {
-            retinaSizes = @[@"2"];
-            targetSizes = @[@"512",
-                            @"256",
-                            @"128"];
-        }
-        else if( [target isEqualToString:@"ios"])
-        {
-            retinaSizes = @[@"2"];
-            targetSizes = @[@"512",     // iTunes store @2X
-                            @"120",     // iPhone iOS 7
-                            @"76",      // iPad iOS 7
-                            @"72",      // iPad iOS 6
-                            @"57",      // iPhone iOS 6
-                            @"50",      // Spotlight small
-                            @"40",      // Spotlight small
-                            @"29"];     // Settings small
-        }
-        else if( [target isEqualToString:@"ios-small"])
-        {
-            retinaSizes = @[@"2"];
-            targetSizes = @[@"50",      // Spotlight small
-                            @"40",      // Spotlight small
-                            @"29",      // Settings small
-                            @"72"];     // iPad iOS 6
-
-        }
-        else if( [target isEqualToString:@"ios-large"])
-        {
-            retinaSizes = @[@"2"];
-            targetSizes = @[@"512",     // iTunes store @2X
-                            @"120",     // iPhone iOS 7
-                            @"76"];     // iPad iOS 7
-
-        }
-        else if( [target isEqualToString:@"ios8"])
-        {
-            retinaSizes = @[@"2",@"3"];
-            targetSizes = @[@"76",      // iPad App
-                            @"60",      // iPhone App
-                            @"40",      // Spotlight small
-                            @"29"];     // Settings small
-        }
-        else if( [target isEqualToString:@"android"])
-        {
-            targetSizes = @[@"512",     // Google Play
-                            @"192",     // xxxhdpi
-                            @"144",     // xxhdpi
-                            @"96",      // xhdpi
-                            @"72",      // hdpi
-                            @"48",      // mdpi small
-                            @"36"];     // ldpi small
-        }
-        else if( [target isEqualToString:@"android-small"])
-        {
-            targetSizes = @[@"72",      // hdpi
-                            @"48",      // mdpi small
-                            @"36"];     // ldpi small
-        }
-        else if( [target isEqualToString:@"android-large"])
-        {
-            targetSizes = @[@"512",     // Google Play
-                            @"192",     // xxxhdpi
-                            @"144",     // xxhdpi
-                            @"96"];     // xhdpi
+            }
+            else {
+                status = StatusInvalidTargetName;
+                NSLog(@"Error %i: invalid target name: %@", status, target);
+                goto exit;
+            }
         }
 
-        // combine the output and target sizes
-        if( outputSizes && targetSizes)
+        if( outputSizes && targetSizes) // combine the output and target sizes
         {
             outputSizes = [outputSizes arrayByAddingObjectsFromArray:targetSizes];
         }
@@ -157,17 +153,27 @@ int main(int argc, const char * argv[])
         {
             outputSizes = targetSizes;
         }
+
+        if (!outputSizes) { // assume a single 100% size
+            outputSizes = @[@"100%"];
+        }
+
+        if (!outputFilePrefix) { // infer it from the inputFileName
+            outputFilePrefix = [[inputFileName lastPathComponent] stringByDeletingPathExtension];
+        }
         
-        if( !inputFileName || !outputFilePrefix || !outputSizes)
+        if( !inputFileName || !outputSizes)
         {
-            NSFileHandle* stdout = [NSFileHandle fileHandleWithStandardOutput];
-            [stdout writeData:[@"usage: pdf2png -i <input.pdf> -o <output-file-prefix> -s 10,20,30,40 -t macos|ios|android -R 1\n" dataUsingEncoding:NSUTF8StringEncoding]];
+            NSString* usage = [NSString stringWithFormat:@"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%]\n\t[-t %@]\n", [targets.allKeys componentsJoinedByString:@"|"]];
+            [stdout writeData:[usage dataUsingEncoding:NSUTF8StringEncoding]];
+            status = StatusMissingArguments;
             goto exit;
         }
                 
         if( ![[NSFileManager defaultManager] fileExistsAtPath:inputFileName isDirectory:nil] )
         {
-            NSLog(@"ERROR input file not found: %@", inputFileName);
+            status = StatusInputFileNotFound;
+            NSLog(@"Error %i: input file not found: %@", status, inputFileName);
             goto exit;
         }
         
@@ -175,61 +181,84 @@ int main(int argc, const char * argv[])
         NSImage* icon = [[NSImage alloc] initByReferencingFile:inputFileName];
         if( !icon)
         {
-            NSLog(@"ERROR image did not load from: %@", inputFileName);
+            status = StatusInputFileNotAnImage;
+            NSLog(@"Error %i: image did not load from: %@", status, inputFileName);
             goto exit;
         }
         
-//      NSRect sourceRect = NSMakeRect(0,0,icon.size.width,icon.size.height);
-
         // write the target NSImage to the output-file-prefix specified
         for( NSString* sizeString in outputSizes)
         {
-            NSSize iconSize;
+            NSSize pointSize = icon.size;
+            NSSize outputSize = icon.size;
+            NSString* retinaSize = nil;
 
-            // TODO check for 123x123 or 123% and scale appropriatlyz
-            NSArray* sizeArray = [sizeString componentsSeparatedByString:@"x"];
-            if( sizeArray.count == 2 )// widthxheight
-            {
-                CGFloat width = [sizeArray[0] doubleValue];
-                CGFloat height = [sizeArray[1] doubleValue];
-                iconSize = NSMakeSize( width, height);
+            // check for size formats: @ @2x 123@2x 123x123 123% 123 and scale appropriately
+            // TODO 123w and 123h for width and heigh with proportinal scaling of the other dimension
+            if ([sizeString isEqualToString:@"@"]) { // 100%
+                // sizes are set above, just keep going
             }
-            else // it's square
+            else if ([sizeString rangeOfString:@"@"].location == 0) { // multiply the existing size
+                retinaSize = [sizeString substringFromIndex:1];
+                CGFloat retina = [[retinaSize substringToIndex:(retinaSize.length - 1)] doubleValue];
+                outputSize = NSMakeSize(pointSize.width * retina, pointSize.height * retina);
+            }
+            else if ([sizeString rangeOfString:@"@"].location != NSNotFound) {
+                NSArray* sizeComponents = [sizeString componentsSeparatedByString:@"@"];
+                retinaSize = sizeComponents[1]; // "2x" for the file name
+                CGFloat pixels = [sizeComponents[0] doubleValue];
+                CGFloat retina = [[retinaSize substringToIndex:(retinaSize.length - 1)] doubleValue];
+                CGFloat retinaPixels = pixels * retina;
+                pointSize = NSMakeSize( pixels, pixels);
+                outputSize = NSMakeSize( retinaPixels, retinaPixels);
+            }
+            else if ([sizeString rangeOfString:@"x"].location < sizeString.length) { // anywhere but at the end of the string
+                NSArray* sizeArray = [sizeString componentsSeparatedByString:@"x"];
+                if( sizeArray.count == 2 )// widthxheight
+                {
+                    CGFloat width = [sizeArray[0] doubleValue];
+                    CGFloat height = [sizeArray[1] doubleValue];
+                    pointSize = NSMakeSize( width, height);
+                    outputSize = NSMakeSize( width, height);
+                }
+            }
+            else if ([sizeString rangeOfString:@"%"].location == (sizeString.length - 1)) { // only at the end of the string
+                NSString* percentString = [sizeString substringToIndex:(sizeString.length - 2)];
+                CGFloat percentSize = ([percentString doubleValue] / 10);
+                outputSize = NSMakeSize((icon.size.width * percentSize), (icon.size.height * percentSize));
+                pointSize = outputSize;
+            }
+            else // it's a simple square size
             {
                 CGFloat size = [sizeString doubleValue];
-                iconSize = NSMakeSize(size, size);
+                pointSize = NSMakeSize(size, size);
+                outputSize = NSMakeSize(size, size);
             }
             
-            if( iconSize.width < 1 || iconSize.height < 1 // proposed image is less than one pixel in either dimension
-             || iconSize.width > 10000 || iconSize.height > 10000) // proposed image is very very large, bigger than any current display
+            if( outputSize.width < 1 || outputSize.height < 1 // proposed image is less than one pixel in either dimension
+             || outputSize.width > 10000 || outputSize.height > 10000) // proposed image is very very large, bigger than any current display
             {
-                NSLog(@"ERROR: Invalid image size: %@ -> %@", sizeString, NSStringFromSize(iconSize));
+                status = StatusOutputSizeInvalid;
+                NSLog(@"Error %i: Invalid output size: %@ -> %@", status, sizeString, NSStringFromSize(outputSize));
                 goto exit;
             }
 
             NSError* error = nil;
-            NSURL* outputFileURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"./%@_%.0fx%.0f.png",outputFilePrefix,iconSize.width,iconSize.height]];
-            [icon writePNGToURL:outputFileURL outputSizeInPixels:iconSize error:&error];
-            
-            if( error) NSLog(@"ERROR: %@ writing: %@", error, outputFileURL);
-            else NSLog(@"wrote: %@", outputFileURL);
-
-            // now write the retina images if requested
-            
-            if( retinaSizes)
-            {
-                for( NSString* multiple in retinaSizes)
-                {
-                    CGFloat scale = [multiple doubleValue];
-                    NSSize retinaSize = NSMakeSize(iconSize.width*scale,iconSize.height*scale);
-                    NSURL* retinaFileURL = [NSURL fileURLWithPath:[NSString stringWithFormat:@"./%@_%.0fx%.0f@%.0fx.png",outputFilePrefix,iconSize.width,iconSize.height,scale]];
-                    [icon writePNGToURL:retinaFileURL outputSizeInPixels:retinaSize error:&error];
-                    
-                    if( error) NSLog(@"ERROR: %@ writing: %@", error, retinaFileURL);
-                    else NSLog(@"wrote: %@", retinaFileURL);
-                }
+            NSString* outputFileName = [NSString stringWithFormat:@"%@_%.0fx%.0f", outputFilePrefix, pointSize.width, pointSize.height];
+            if (retinaSize) { // append the retina tag
+                outputFileName = [outputFileName stringByAppendingString:@"@"];
+                outputFileName = [outputFileName stringByAppendingString:retinaSize];
             }
+            outputFileName = [outputFileName stringByAppendingPathExtension:@"png"];
+            [icon writePNGToURL:[NSURL fileURLWithPath:outputFileName] outputSizeInPixels:outputSize error:&error];
             
+            if( error) {
+                status = StatusOutputWriteError;
+                NSLog(@"Error %i: %@ writing: %@", status, error, outputFileName);
+                goto exit;
+            }
+
+            [stdout writeData:[[NSString stringWithFormat:@"wrote (%.0fx%.0f) pixels to %@\n", outputSize.width, outputSize.height, outputFileName] dataUsingEncoding:NSUTF8StringEncoding]];
         }
     }
 
