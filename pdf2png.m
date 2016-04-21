@@ -134,15 +134,10 @@ int main(int argc, const char * argv[])
         };
 
         NSArray* targetSizes = nil;
-        if( target) {
-            if( [targets objectForKey:target] != nil) {
-
-            }
-            else {
-                status = StatusInvalidTargetName;
-                NSLog(@"Error %i: invalid target name: %@", status, target);
-                goto exit;
-            }
+        if( target && ((targetSizes = [targets objectForKey:target]) == nil)) {
+            status = StatusInvalidTargetName;
+            NSLog(@"Error %i: invalid target name: %@", status, target);
+            goto exit;
         }
 
         if( outputSizes && targetSizes) // combine the output and target sizes
@@ -268,7 +263,8 @@ int main(int argc, const char * argv[])
                 goto exit;
             }
 
-            [stdout writeData:[[NSString stringWithFormat:@"wrote (%.0fx%.0f) pixels to %@\n", outputSize.width, outputSize.height, outputFileName] dataUsingEncoding:NSUTF8StringEncoding]];
+            [stdout writeData:[[NSString stringWithFormat:@"pdf2png wrote [%.0f x %.0f] pixels to %@\n",
+                outputSize.width, outputSize.height, outputFileName] dataUsingEncoding:NSUTF8StringEncoding]];
         }
     }
 

@@ -32,22 +32,24 @@ You have a logo for an application which is square with large and small variants
 
 Is equivalent to:
 
-    > pdf2png -i apple-logo-small.pdf -o app-logo -s 29,29@2x,29@3x,40,40@2x,40@3x
-    pdf2png wrote (29x29) pixels to app-logo_29x29.png
-    pdf2png wrote (58x58) pixels to app-logo_29x29@2x.png
-    pdf2png wrote (87x87) pixels to app-logo_29x29@3x.png
-    pdf2png wrote (40x40) pixels to app-logo_40x40.png
-    pdf2png wrote (80x80) pixels to app-logo_40x40@2x.png
-    pdf2png wrote (120x120) pixels to app-logo_40x40@3x.png
+    > pdf2png -i app-logo-small.pdf -o app-logo -s 29,29@2x,29@3x,40,40@2x,40@3x
+    pdf2png wrote [29 x 29] pixels to app-logo_29x29.png
+    pdf2png wrote [58 x 58] pixels to app-logo_29x29@2x.png
+    pdf2png wrote [87 x 87] pixels to app-logo_29x29@3x.png
+    pdf2png wrote [40 x 40] pixels to app-logo_40x40.png
+    pdf2png wrote [80 x 80] pixels to app-logo_40x40@2x.png
+    pdf2png wrote [120 x 120] pixels to app-logo_40x40@3x.png
 
 To complete the set you can run:
 
     > pdf2png -i app-logo-small.pdf -o app-logo -t android-small
-    ...
+    pdf2png wrote...
+    
     > pdf2png -i app-logo-large.pdf -o app-logo -t ios-large
-    ...
+    pdf2png wrote...
+    
     > pdf2png -i app-logo-large.pdf -o app-logo -t android-large
-    ...
+    pdf2png wrote...
 
 ## installing
 
