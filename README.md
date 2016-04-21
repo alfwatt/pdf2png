@@ -5,39 +5,48 @@ with presets for rendering icons for iOS, MacOS and Android
 
 ## usage
 
-    pdf2png -i <input.pdf> -o <output-file-prefix> -s 10,20x40,40x20 -R 2 -t <target>
-        -i - input file name, a PDF
-        -o - output file prefix, to which the size and .png will be appended
-        -s - a comma seperated array of output sizes
-        -R - generate retina versions of the image @2x
-        -t - a target platform: macos, ios or android
-           - macos:         -s 16,32,128,256,512 -R 2
-           - macos-small:   -s 16,32 -R 2
-           - macos-large:   -s 128,256,512 -R 2
-           - ios:           -s 29,40,50,57,72,76 -R 2
-           - ios-small:     -s 29,40,50,57 -R 2
-           - ios-large:     -s 72,76,120 -R 2
-           - ios8:          -s 29,40,60,76 -R 2,3
-           - android:       -s 36.48,72,96,144,192
-           - android-small: -s 36.48,72
-           - android-large: -s 96,144,192
+    usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x50,100@2x,400%]
+        [-t ios|android-small|macos-small|android-large|ios-small|macos|ios-large|android|macos-large]
+
+    -i - input file name, a PDF
+    -o - output file prefix, to which the size and .png will be appended
+    -s - a comma seperated array of output sizes
+    -t - a target platform, which outputs a set of sizes suitable for icons
+
+## sizes
+
+Sizes can be expressed in a number of formats
+
+    @ -- 100%
+    @2x -- Retina Sizes
+    50 -- Square Sizes (50x50)
+    100x50 -- Rectangular Sizes
+    100@2x -- Square Retina Sizes (200,200)
+    400% -- Percentage Sizes
 
 ## example
 
 You have a logo for an application app-logo.pdf which you need to render for iOS and Android:
 
-    pdf2png -i app-logo-small.pdf -t ios-small
+    pdf2png -i app-logo-small.pdf -o app-logo -t ios-small
 
-Will genrate the following files:
+Is equivalent to:
 
-    app-logo-29x29.png
-    app-logo-29x29@2X.png
-    app-logo-40x40.png
-    app-logo-40x40@2X.png
-    app-logo-50x50.png
-    app-logo-50x50@2X.png
-    app-logo-57x57.png
-    app-logo-57x57@2X.png
+    > pdf2png -i apple-logo-small.pdf -o app-logo -s 29,29@2x,29@3x,40,40@2x,40@3x
+    pdf2png wrote (29x29) pixels to app-logo-29x29.png
+    pdf2png wrote (58x58) pixels to app-logo-29x29@2x.png
+    pdf2png wrote (87x87) pixels to app-logo-29x29@3x.png
+    pdf2png wrote (40x40) pixels to app-logo-40x40.png
+    pdf2png wrote (80x80) pixels to app-logo-40x40@2X.png
+    pdf2png wrote (120x120) pixels to app-logo-40x40@3X.png
+    >
+
+## installing
+
+Use the Makefile to install in /usr/local/bin
+
+    make build
+    make install
 
 --
 
