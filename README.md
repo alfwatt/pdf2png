@@ -15,31 +15,39 @@ with presets for rendering icons for iOS, MacOS and Android
 
 ## sizes
 
-Sizes can be expressed in a number of formats
+Output sizes can be expressed in a number of formats:
 
-    @ -- 100%
-    @2x -- Retina Sizes
-    50 -- Square Sizes (50x50)
-    100x50 -- Rectangular Sizes
-    100@2x -- Square Retina Sizes (200,200)
-    400% -- Percentage Sizes
+    @      - 100%
+    @2x    - Retina Sizes
+    50     - Square Sizes (50x50)
+    100x50 - Rectangular Sizes
+    100@2x - Square Retina Sizes (200,200)
+    400%   - Percentage Sizes
 
 ## example
 
-You have a logo for an application app-logo.pdf which you need to render for iOS and Android:
+You have a logo for an application which is square with large and small variants that you want to render for iOS and Android:
 
     pdf2png -i app-logo-small.pdf -o app-logo -t ios-small
 
 Is equivalent to:
 
     > pdf2png -i apple-logo-small.pdf -o app-logo -s 29,29@2x,29@3x,40,40@2x,40@3x
-    pdf2png wrote (29x29) pixels to app-logo-29x29.png
-    pdf2png wrote (58x58) pixels to app-logo-29x29@2x.png
-    pdf2png wrote (87x87) pixels to app-logo-29x29@3x.png
-    pdf2png wrote (40x40) pixels to app-logo-40x40.png
-    pdf2png wrote (80x80) pixels to app-logo-40x40@2X.png
-    pdf2png wrote (120x120) pixels to app-logo-40x40@3X.png
-    >
+    pdf2png wrote (29x29) pixels to app-logo_29x29.png
+    pdf2png wrote (58x58) pixels to app-logo_29x29@2x.png
+    pdf2png wrote (87x87) pixels to app-logo_29x29@3x.png
+    pdf2png wrote (40x40) pixels to app-logo_40x40.png
+    pdf2png wrote (80x80) pixels to app-logo_40x40@2x.png
+    pdf2png wrote (120x120) pixels to app-logo_40x40@3x.png
+
+To complete the set you can run:
+
+    > pdf2png -i app-logo-small.pdf -o app-logo -t android-small
+    ...
+    > pdf2png -i app-logo-large.pdf -o app-logo -t ios-large
+    ...
+    > pdf2png -i app-logo-large.pdf -o app-logo -t android-large
+    ...
 
 ## installing
 

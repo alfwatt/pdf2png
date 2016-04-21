@@ -155,7 +155,7 @@ int main(int argc, const char * argv[])
         }
 
         if (!outputSizes) { // assume a single 100% size
-            outputSizes = @[@"100%"];
+            outputSizes = @[@"@"];
         }
 
         if (!outputFilePrefix) { // infer it from the inputFileName
@@ -189,6 +189,7 @@ int main(int argc, const char * argv[])
         // write the target NSImage to the output-file-prefix specified
         for( NSString* sizeString in outputSizes)
         {
+            BOOL isRetina = NO;
             NSSize pointSize = icon.size;
             NSSize outputSize = icon.size;
             NSString* retinaSize = nil;
@@ -197,8 +198,10 @@ int main(int argc, const char * argv[])
             // TODO 123w and 123h for width and heigh with proportinal scaling of the other dimension
             if ([sizeString isEqualToString:@"@"]) { // 100%
                 // sizes are set above, just keep going
+                isRetina = YES;
             }
             else if ([sizeString rangeOfString:@"@"].location == 0) { // multiply the existing size
+                isRetina = YES;
                 retinaSize = [sizeString substringFromIndex:1];
                 CGFloat retina = [[retinaSize substringToIndex:(retinaSize.length - 1)] doubleValue];
                 outputSize = NSMakeSize(pointSize.width * retina, pointSize.height * retina);
@@ -244,7 +247,14 @@ int main(int argc, const char * argv[])
             }
 
             NSError* error = nil;
-            NSString* outputFileName = [NSString stringWithFormat:@"%@_%.0fx%.0f", outputFilePrefix, pointSize.width, pointSize.height];
+            NSString* outputFileName = nil;
+            if( isRetina) {
+                outputFileName = outputFilePrefix;
+            }
+            else {
+                outputFileName = [NSString stringWithFormat:@"%@_%.0fx%.0f", outputFilePrefix, pointSize.width, pointSize.height];
+            }
+
             if (retinaSize) { // append the retina tag
                 outputFileName = [outputFileName stringByAppendingString:@"@"];
                 outputFileName = [outputFileName stringByAppendingString:retinaSize];
