@@ -6,23 +6,27 @@ with presets for rendering icons for iOS, MacOS and Android
 ## usage
 
     usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x50,100@2x,400%]
-        [-t ios|android-small|macos-small|android-large|ios-small|macos|ios-large|android|macos-large]
+        [-t ios|android-small|macos-small|android-large|ios-small|macos|ios-large|android|macos-large|retina]
 
-    -i - input file name, a PDF
-    -o - output file prefix, to which the size and .png will be appended
-    -s - a comma seperated array of output sizes
-    -t - a target platform, which outputs a set of sizes suitable for icons
+    -i      - input file name, a PDF
+    -o      - output file prefix, to which the size and .png will be appended
+    -s      - a comma seperated array of output sizes
+    -t      - a target group, which outputs a set of sizes suitable for icons
+    -b 8    - bits per channel, default is 8
+    -a YES  - include alpha channel, YES or NO
 
 ## sizes
 
 Output sizes can be expressed in a number of formats:
 
-    @      - 100%
-    @2x    - Retina Sizes
-    50     - Square Sizes (50x50)
-    100x50 - Rectangular Sizes
-    100@2x - Square Retina Sizes (200,200)
+    @       - Original Size
+    @2x     - Retina Sizes
+    50      - Square Sizes (50x50)
+    100x50  - Rectangular Sizes
+    100@2x  - Square Retina Sizes (200,200)
     400%   - Percentage Sizes
+    200w   - Fixed width, proportinate height
+    200h   - Fixed height, proportinate width
 
 ## example
 

@@ -1,6 +1,7 @@
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <ImageIO/ImageIO.h>
 
 #pragma mark -
 
@@ -8,7 +9,7 @@
 
 @interface NSImage (SSWPNGAdditions)
 
-- (BOOL)writePNGToURL:(NSURL*)URL outputSizeInPixels:(NSSize)outputSizePx error:(NSError*__autoreleasing*)error;
+- (BOOL)writePNGToURL:(NSURL*)URL outputSize:(NSSize)outputSizePx alphaChannel:(BOOL)alpha error:(NSError*__autoreleasing*)error;
 
 @end
 
@@ -16,7 +17,7 @@
 
 @implementation NSImage (SSWPNGAdditions)
 
-- (BOOL)writePNGToURL:(NSURL*)URL outputSizeInPixels:(NSSize)outputSizePx error:(NSError*__autoreleasing*)error
+- (BOOL)writePNGToURL:(NSURL*)URL outputSize:(NSSize)outputSizePx alphaChannel:(BOOL)alpha error:(NSError*__autoreleasing*)error
 {
     BOOL result = YES;
     NSImage* scalingImage = [NSImage imageWithSize:self.size flipped:NO drawingHandler:^BOOL(NSRect dstRect) {
@@ -24,14 +25,20 @@
         return YES;
     }];
     NSRect proposedRect = NSMakeRect(0.0, 0.0, outputSizePx.width, outputSizePx.height);
+    unsigned components = 4;
+    unsigned bitsPerComponent = 8;
+    unsigned bytesPerRow = proposedRect.size.width * (components * (bitsPerComponent / BYTE_SIZE));
     CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-    CGContextRef cgContext = CGBitmapContextCreate(NULL, proposedRect.size.width, proposedRect.size.height, 8, 4*proposedRect.size.width, colorSpace, kCGBitmapAlphaInfoMask & kCGImageAlphaPremultipliedFirst);
-    CGColorSpaceRelease(colorSpace);
+    CGContextRef cgContext = CGBitmapContextCreate(NULL,
+        proposedRect.size.width, proposedRect.size.height,
+        bitsPerComponent, bytesPerRow, colorSpace, (alpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst));
     NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:NO];
-    CGContextRelease(cgContext);
-    CGImageRef cgImage = [scalingImage CGImageForProposedRect:&proposedRect context:context hints:nil];
+
+    NSDictionary* hints = @{(id)kCGImagePropertyHasAlpha: @(alpha)};
+    CGImageRef cgImage = [scalingImage CGImageForProposedRect:&proposedRect context:context hints:hints];
     CGImageDestinationRef destination = CGImageDestinationCreateWithURL((__bridge CFURLRef)(URL), kUTTypePNG, 1, NULL);
-    CGImageDestinationAddImage(destination, cgImage, nil);
+    CFDictionaryRef imageOptions = CFBridgingRetain(hints);
+    CGImageDestinationAddImage(destination, cgImage, imageOptions);
     if(!CGImageDestinationFinalize(destination))
     {
         NSDictionary* details = @{NSLocalizedDescriptionKey:@"Error writing PNG image"};
@@ -39,7 +46,11 @@
         *error = [NSError errorWithDomain:@"SSWPNGAdditionsErrorDomain" code:10 userInfo:details];
         result = NO;
     }
+exit:
+    CGColorSpaceRelease(colorSpace);
+    CGContextRelease(cgContext);
     CFRelease(destination);
+    CFRelease(imageOptions);
     return result;
 }
 
@@ -66,28 +77,43 @@ int main(int argc, const char * argv[])
         NSDictionary* args = [[NSUserDefaults standardUserDefaults] volatileDomainForName:NSArgumentDomain];
 //        NSLog(@"args: %@", args);
         
-        // load the pdf into an NSImage
         NSString* inputFileName = [args objectForKey:@"i"];
         NSString* outputFilePrefix = [args objectForKey:@"o"];
         NSString* target = [args objectForKey:@"t"];
         NSArray* outputSizes = [[args objectForKey:@"s"] componentsSeparatedByString:@","];
+        NSNumber* bitsArg = [args objectForKey:@"b"];
+        NSNumber* alphaArg = [args objectForKey:@"a"];
+
+        unsigned bitsPerChannel = 8;
+        if (bitsArg) {
+            bitsPerChannel = [bitsArg unsignedIntValue];
+        }
+
+        BOOL alphaChannel = YES;
+        if (alphaArg) {
+            alphaChannel = [alphaArg boolValue];
+        }
 
         NSDictionary* const targets = @{
-            @"macos": @[
-                @"16", @"16@2x",
-                @"32", @"32@2x",
-                @"128", @"128@2x",
-                @"256", @"256@2x",
-                @"512", @"512@2x"
+            @"android": @[
+                @"512",     // Google Play
+                @"192",     // xxxhdpi
+                @"144",     // xxhdpi
+                @"96",      // xhdpi
+                @"72",      // hdpi
+                @"48",      // mdpi small
+                @"36"       // ldpi small
             ],
-            @"macos-small": @[
-                @"16", @"16@2x",
-                @"32", @"32@2x"
+            @"android-small": @[
+                @"72",      // hdpi
+                @"48",      // mdpi small
+                @"36"       // ldpi small
             ],
-            @"macos-large": @[
-                @"128", @"128@2x",
-                @"256", @"256@2x",
-                @"512", @"512@2x"
+            @"android-large": @[
+                @"512",     // Google Play
+                @"192",     // xxxhdpi
+                @"144",     // xxhdpi
+                @"96"       // xhdpi
             ],
 
             @"ios": @[
@@ -111,25 +137,25 @@ int main(int argc, const char * argv[])
                 @"512"                      // iTunes Store
             ],
 
-            @"android": @[
-                @"512",     // Google Play
-                @"192",     // xxxhdpi
-                @"144",     // xxhdpi
-                @"96",      // xhdpi
-                @"72",      // hdpi
-                @"48",      // mdpi small
-                @"36"       // ldpi small
+            @"macos": @[
+                @"16", @"16@2x",
+                @"32", @"32@2x",
+                @"128", @"128@2x",
+                @"256", @"256@2x",
+                @"512", @"512@2x"
             ],
-            @"android-small": @[
-                @"72",      // hdpi
-                @"48",      // mdpi small
-                @"36"       // ldpi small
+            @"macos-small": @[
+                @"16", @"16@2x",
+                @"32", @"32@2x"
             ],
-            @"android-large": @[
-                @"512",     // Google Play
-                @"192",     // xxxhdpi
-                @"144",     // xxhdpi
-                @"96"       // xhdpi
+            @"macos-large": @[
+                @"128", @"128@2x",
+                @"256", @"256@2x",
+                @"512", @"512@2x"
+            ],
+
+            @"retina": @[
+                @"@", @"@2x", @"@3x"
             ]
         };
 
@@ -159,7 +185,9 @@ int main(int argc, const char * argv[])
         
         if( !inputFileName || !outputSizes)
         {
-            NSString* usage = [NSString stringWithFormat:@"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%]\n\t[-t %@]\n", [targets.allKeys componentsJoinedByString:@"|"]];
+            NSString* usage = [NSString stringWithFormat:
+                @"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%]\n\t[-t %@]\n",
+                [[targets.allKeys sortedArrayUsingSelector:@selector(compare:)] componentsJoinedByString:@"|"]];
             [stdout writeData:[usage dataUsingEncoding:NSUTF8StringEncoding]];
             status = StatusMissingArguments;
             goto exit;
@@ -189,8 +217,7 @@ int main(int argc, const char * argv[])
             NSSize outputSize = icon.size;
             NSString* retinaSize = nil;
 
-            // check for size formats: @ @2x 123@2x 123x123 123% 123 and scale appropriately
-            // TODO 123w and 123h for width and heigh with proportinal scaling of the other dimension
+            // check for size formats: @ @2x 123@2x 123x123 123% 123w 123h 123 and scale appropriately
             if ([sizeString isEqualToString:@"@"]) { // 100%
                 // sizes are set above, just keep going
                 isRetina = YES;
@@ -226,6 +253,20 @@ int main(int argc, const char * argv[])
                 outputSize = NSMakeSize((icon.size.width * percentSize), (icon.size.height * percentSize));
                 pointSize = outputSize;
             }
+            else if ([sizeString rangeOfString:@"h"].location == (sizeString.length - 1)) { // fixed height
+                NSString* widthString = [sizeString substringToIndex:(sizeString.length - 2)];
+                CGFloat fixedWidth = [widthString doubleValue];
+                CGFloat scaleFactor = (icon.size.width / fixedWidth);
+                outputSize = NSMakeSize(fixedWidth, (icon.size.height * scaleFactor));
+                pointSize = outputSize;
+            }
+            else if ([sizeString rangeOfString:@"w"].location == (sizeString.length - 1)) { // fixed width
+                NSString* heightString = [sizeString substringToIndex:(sizeString.length - 2)];
+                CGFloat fixedHeight = [heightString doubleValue];
+                CGFloat scaleFactor = (icon.size.height / fixedHeight);
+                outputSize = NSMakeSize((icon.size.width * scaleFactor), fixedHeight);
+                pointSize = outputSize;
+            }
             else // it's a simple square size
             {
                 CGFloat size = [sizeString doubleValue];
@@ -255,7 +296,7 @@ int main(int argc, const char * argv[])
                 outputFileName = [outputFileName stringByAppendingString:retinaSize];
             }
             outputFileName = [outputFileName stringByAppendingPathExtension:@"png"];
-            [icon writePNGToURL:[NSURL fileURLWithPath:outputFileName] outputSizeInPixels:outputSize error:&error];
+            [icon writePNGToURL:[NSURL fileURLWithPath:outputFileName] outputSize:outputSize alphaChannel:alphaChannel error:&error];
             
             if( error) {
                 status = StatusOutputWriteError;
