@@ -12,8 +12,12 @@ with presets for rendering icons for iOS, MacOS and Android
     -o      - output file prefix, to which the size and .png will be appended
     -s      - a comma seperated array of output sizes
     -t      - a target group, which outputs a set of sizes suitable for icons
-    -b 8    - bits per channel, default is 8
+    
+TODO Options
+
     -a YES  - include alpha channel, YES or NO
+    -b 8    - bits per channel, default is 8
+    -c YES  - crush, generate the smallest PNG possible
 
 ## sizes
 
