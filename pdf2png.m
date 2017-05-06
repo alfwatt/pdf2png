@@ -160,18 +160,16 @@ int main(int argc, const char * argv[])
         };
 
         NSArray* targetSizes = nil;
-        if( target && ((targetSizes = [targets objectForKey:target]) == nil)) {
+        if (target && ((targetSizes = [targets objectForKey:target]) == nil)) {
             status = StatusInvalidTargetName;
             NSLog(@"Error %i: invalid target name: %@", status, target);
             goto exit;
         }
 
-        if( outputSizes && targetSizes) // combine the output and target sizes
-        {
+        if (outputSizes && targetSizes) { // combine the output and target sizes
             outputSizes = [outputSizes arrayByAddingObjectsFromArray:targetSizes];
         }
-        else if ( targetSizes && !outputSizes)
-        {
+        else if (targetSizes && !outputSizes) {
             outputSizes = targetSizes;
         }
 
@@ -183,8 +181,7 @@ int main(int argc, const char * argv[])
             outputFilePrefix = [[inputFileName lastPathComponent] stringByDeletingPathExtension];
         }
         
-        if( !inputFileName || !outputSizes)
-        {
+        if (!inputFileName || !outputSizes) {
             NSString* usage = [NSString stringWithFormat:
                 @"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%]\n\t[-t %@]\n",
                 [[targets.allKeys sortedArrayUsingSelector:@selector(compare:)] componentsJoinedByString:@"|"]];
@@ -193,8 +190,7 @@ int main(int argc, const char * argv[])
             goto exit;
         }
                 
-        if( ![[NSFileManager defaultManager] fileExistsAtPath:inputFileName isDirectory:nil] )
-        {
+        if (![[NSFileManager defaultManager] fileExistsAtPath:inputFileName isDirectory:nil]) {
             status = StatusInputFileNotFound;
             NSLog(@"Error %i: input file not found: %@", status, inputFileName);
             goto exit;
@@ -202,16 +198,14 @@ int main(int argc, const char * argv[])
         
         // create a target NSImage at each of the specified sizes
         NSImage* icon = [[NSImage alloc] initByReferencingFile:inputFileName];
-        if( !icon)
-        {
+        if (!icon) {
             status = StatusInputFileNotAnImage;
             NSLog(@"Error %i: image did not load from: %@", status, inputFileName);
             goto exit;
         }
         
         // write the target NSImage to the output-file-prefix specified
-        for( NSString* sizeString in outputSizes)
-        {
+        for (NSString* sizeString in outputSizes) {
             BOOL isRetina = NO;
             NSSize pointSize = icon.size;
             NSSize outputSize = icon.size;
@@ -267,16 +261,14 @@ int main(int argc, const char * argv[])
                 outputSize = NSMakeSize((icon.size.width * scaleFactor), fixedHeight);
                 pointSize = outputSize;
             }
-            else // it's a simple square size
-            {
+            else { // it's a simple square size
                 CGFloat size = [sizeString doubleValue];
                 pointSize = NSMakeSize(size, size);
                 outputSize = NSMakeSize(size, size);
             }
             
-            if( outputSize.width < 1 || outputSize.height < 1 // proposed image is less than one pixel in either dimension
-             || outputSize.width > 10000 || outputSize.height > 10000) // proposed image is very very large, bigger than any current display
-            {
+            if (outputSize.width < 1 || outputSize.height < 1 // proposed image is less than 1x1
+             || outputSize.width > 10000 || outputSize.height > 10000) { // proposed image is larger than any current display
                 status = StatusOutputSizeInvalid;
                 NSLog(@"Error %i: Invalid output size: %@ -> %@", status, sizeString, NSStringFromSize(outputSize));
                 goto exit;
@@ -284,7 +276,7 @@ int main(int argc, const char * argv[])
 
             NSError* error = nil;
             NSString* outputFileName = nil;
-            if( isRetina) {
+            if (isRetina) {
                 outputFileName = outputFilePrefix;
             }
             else {
@@ -298,7 +290,7 @@ int main(int argc, const char * argv[])
             outputFileName = [outputFileName stringByAppendingPathExtension:@"png"];
             [icon writePNGToURL:[NSURL fileURLWithPath:outputFileName] outputSize:outputSize alphaChannel:alphaChannel error:&error];
             
-            if( error) {
+            if (error) {
                 status = StatusOutputWriteError;
                 NSLog(@"Error %i: %@ writing: %@", status, error, outputFileName);
                 goto exit;
