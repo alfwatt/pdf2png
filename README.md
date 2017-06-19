@@ -5,21 +5,23 @@ with presets for rendering icons for iOS, MacOS and Android
 
 ## usage
 
-    usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x50,100@2x,400%]
+    usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x50,100@2x,400%] [-a YES|NO]
         [-t ios|android-small|macos-small|android-large|ios-small|macos|ios-large|android|macos-large|retina]
 
     -i      - input file name, a PDF
     -o      - output file prefix, to which the size and .png will be appended
     -s      - a comma seperated array of output sizes
     -t      - a target group, which outputs a set of sizes suitable for icons
-    -a YES  - include alpha channel, YES or NO
+    -a      - include alpha channel, YES or NO
     
-    # TODO Options
+  # TODO Options
 
-    -b 8    - bits per channel, default is 8
-    -c 3    - channels 1 or 3 (2 or 4?)
-    -m RGB  - model
-    -z N    - crush, generate the smallest PNG possible over N iterations
+    -b 1,8  - bits per channel, default is 8
+    -c 1,3  - channels 1 or 3 (2 or 4?)
+    -m RGB  - color model RGB|LAB|CMYK|ETC.
+    -v      - version info
+    -z      - crush, generate the smallest PNG possible
+    -Z      - crush more
 
 ## sizes
 
@@ -38,11 +40,11 @@ Output sizes can be expressed in a number of formats:
 
 You have a logo for an application which is square with large and small variants that you want to render for iOS and Android:
 
-    pdf2png -i app-logo-small.pdf -o app-logo -t ios-small
+    $ pdf2png -i app-logo-small.pdf -o app-logo -t ios-small
 
 Is equivalent to:
 
-    > pdf2png -i app-logo-small.pdf -o app-logo -s 29,29@2x,29@3x,40,40@2x,40@3x
+    $ pdf2png -i app-logo-small.pdf -o app-logo -s 29,29@2x,29@3x,40,40@2x,40@3x
     pdf2png wrote [29 x 29] pixels to app-logo_29x29.png
     pdf2png wrote [58 x 58] pixels to app-logo_29x29@2x.png
     pdf2png wrote [87 x 87] pixels to app-logo_29x29@3x.png
@@ -52,13 +54,13 @@ Is equivalent to:
 
 To complete the set you can run:
 
-    > pdf2png -i app-logo-small.pdf -o app-logo -t android-small
+    $ pdf2png -i app-logo-small.pdf -o app-logo -t android-small
     pdf2png wrote...
     
-    > pdf2png -i app-logo-large.pdf -o app-logo -t ios-large
+    $ pdf2png -i app-logo-large.pdf -o app-logo -t ios-large
     pdf2png wrote...
     
-    > pdf2png -i app-logo-large.pdf -o app-logo -t android-large
+    $ pdf2png -i app-logo-large.pdf -o app-logo -t android-large
     pdf2png wrote...
 
 ## installing
@@ -67,6 +69,11 @@ Use the Makefile to install in /usr/local/bin
 
     make build
     make install
+
+## versions
+
+1.0 - april 2016ish
+1.1 + alpha channel support 
 
 --
 
