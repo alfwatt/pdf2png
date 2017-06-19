@@ -25,8 +25,8 @@
         return YES;
     }];
     NSRect proposedRect = NSMakeRect(0.0, 0.0, outputSizePx.width, outputSizePx.height);
-    unsigned components = 4;
-    unsigned bitsPerComponent = 8;
+    unsigned components = 4; // TODO -c
+    unsigned bitsPerComponent = 8; // TODO -
     unsigned bytesPerRow = proposedRect.size.width * (components * (bitsPerComponent / BYTE_SIZE));
     CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
     CGContextRef cgContext = CGBitmapContextCreate(NULL,
@@ -39,8 +39,7 @@
     CGImageDestinationRef destination = CGImageDestinationCreateWithURL((__bridge CFURLRef)(URL), kUTTypePNG, 1, NULL);
     CFDictionaryRef imageOptions = CFBridgingRetain(hints);
     CGImageDestinationAddImage(destination, cgImage, imageOptions);
-    if(!CGImageDestinationFinalize(destination))
-    {
+    if(!CGImageDestinationFinalize(destination)) {
         NSDictionary* details = @{NSLocalizedDescriptionKey:@"Error writing PNG image"};
         [details setValue:@"ran out of money" forKey:NSLocalizedDescriptionKey];
         *error = [NSError errorWithDomain:@"SSWPNGAdditionsErrorDomain" code:10 userInfo:details];
@@ -59,6 +58,7 @@ exit:
 #pragma mark -
 
 enum {
+    StatusUnkonwn = -1,
     StatusSuccess = 0,
     StatusInvalidTargetName,
     StatusMissingArguments,
@@ -70,7 +70,7 @@ enum {
 
 int main(int argc, const char * argv[])
 {
-    int status = StatusSuccess;
+    int status = StatusUnkonwn;
     @autoreleasepool
     {
         NSFileHandle* stdout = [NSFileHandle fileHandleWithStandardOutput];
@@ -81,18 +81,22 @@ int main(int argc, const char * argv[])
         NSString* outputFilePrefix = [args objectForKey:@"o"];
         NSString* target = [args objectForKey:@"t"];
         NSArray* outputSizes = [[args objectForKey:@"s"] componentsSeparatedByString:@","];
-        NSNumber* bitsArg = [args objectForKey:@"b"];
         NSNumber* alphaArg = [args objectForKey:@"a"];
-
-        unsigned bitsPerChannel = 8;
-        if (bitsArg) {
-            bitsPerChannel = [bitsArg unsignedIntValue];
-        }
 
         BOOL alphaChannel = YES;
         if (alphaArg) {
             alphaChannel = [alphaArg boolValue];
         }
+
+        /*
+        NSNumber* bitsArg = [args objectForKey:@"b"];
+        unsigned bitsPerChannel = 8;
+        if (bitsArg) {
+            bitsPerChannel = [bitsArg unsignedIntValue];
+            // TODO check for valid number of bits per channel
+        }
+        */
+
 
         NSDictionary* const targets = @{
             @"android": @[
@@ -183,7 +187,7 @@ int main(int argc, const char * argv[])
         
         if (!inputFileName || !outputSizes) {
             NSString* usage = [NSString stringWithFormat:
-                @"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%]\n\t[-t %@]\n",
+                @"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%] [-a YES|NO] \n\t[-t %@]\n",
                 [[targets.allKeys sortedArrayUsingSelector:@selector(compare:)] componentsJoinedByString:@"|"]];
             [stdout writeData:[usage dataUsingEncoding:NSUTF8StringEncoding]];
             status = StatusMissingArguments;
@@ -233,8 +237,7 @@ int main(int argc, const char * argv[])
             }
             else if ([sizeString rangeOfString:@"x"].location < sizeString.length) { // anywhere but at the end of the string
                 NSArray* sizeArray = [sizeString componentsSeparatedByString:@"x"];
-                if( sizeArray.count == 2 )// widthxheight
-                {
+                if (sizeArray.count == 2 ) { // widthxheight
                     CGFloat width = [sizeArray[0] doubleValue];
                     CGFloat height = [sizeArray[1] doubleValue];
                     pointSize = NSMakeSize( width, height);
@@ -301,6 +304,7 @@ int main(int argc, const char * argv[])
         }
     }
 
+    status = StatusSuccess;
 exit:
     
     return status;
