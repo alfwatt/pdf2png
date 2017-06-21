@@ -16,10 +16,10 @@ with presets for rendering icons for iOS, MacOS and Android
     
   # TODO Options
 
-    -b 1,8  - bits per channel, default is 8
-    -c 1,3  - channels 1 or 3 (2 or 4?)
-    -m RGB  - color model RGB|LAB|CMYK|ETC.
+    -b 1,8  - bits per channel
+    -c RGB  - color model GRAY|INDEX|RGB|LAB|CMYK|ETC.
     -v      - version info
+    -V      - verbose
     -z      - crush, generate the smallest PNG possible
     -Z      - crush more
 

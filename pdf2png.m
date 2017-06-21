@@ -20,36 +20,50 @@
 - (BOOL)writePNGToURL:(NSURL*)URL outputSize:(NSSize)outputSizePx alphaChannel:(BOOL)alpha error:(NSError*__autoreleasing*)error
 {
     BOOL result = YES;
-    NSImage* scalingImage = [NSImage imageWithSize:self.size flipped:NO drawingHandler:^BOOL(NSRect dstRect) {
+    NSImage* sourceImage = [NSImage imageWithSize:self.size flipped:NO drawingHandler:^BOOL(NSRect dstRect) {
         [self drawAtPoint:NSMakePoint(0.0, 0.0) fromRect:dstRect operation:NSCompositeSourceOver fraction:1.0];
         return YES;
     }];
     NSRect proposedRect = NSMakeRect(0.0, 0.0, outputSizePx.width, outputSizePx.height);
-    unsigned components = 4; // TODO -c
-    unsigned bitsPerComponent = 8; // TODO -
+    unsigned bitsPerComponent = 8;
+    unsigned components = (alpha ? 4 : 3);
     unsigned bytesPerRow = proposedRect.size.width * (components * (bitsPerComponent / BYTE_SIZE));
     CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-    CGContextRef cgContext = CGBitmapContextCreate(NULL,
-        proposedRect.size.width, proposedRect.size.height,
-        bitsPerComponent, bytesPerRow, colorSpace, (alpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst));
-    NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:NO];
 
-    NSDictionary* hints = @{(id)kCGImagePropertyHasAlpha: @(alpha)};
-    CGImageRef cgImage = [scalingImage CGImageForProposedRect:&proposedRect context:context hints:hints];
-    CGImageDestinationRef destination = CGImageDestinationCreateWithURL((__bridge CFURLRef)(URL), kUTTypePNG, 1, NULL);
-    CFDictionaryRef imageOptions = CFBridgingRetain(hints);
-    CGImageDestinationAddImage(destination, cgImage, imageOptions);
+    // seutp the context
+    NSDictionary* contextHints = @{(id)kCGImagePropertyHasAlpha: @(alpha)};
+    CGContextRef cgContext = CGBitmapContextCreate(
+        NULL, proposedRect.size.width, proposedRect.size.height,
+        bitsPerComponent, bytesPerRow, colorSpace,
+        (alpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNone));
+    NSGraphicsContext* context =
+        [NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:NO];
+
+    // scale the image
+    CGImageRef scaledImage =
+        [sourceImage CGImageForProposedRect:&proposedRect context:context hints:contextHints];
+
+    // setup the destination
+    CGImageDestinationRef destination =
+        CGImageDestinationCreateWithURL((__bridge CFURLRef)(URL), kUTTypePNG, 1, NULL);
+    CFDictionaryRef destinationOptions = CFBridgingRetain(contextHints);
+    CGImageDestinationSetProperties(destination, destinationOptions);
+    CGImageDestinationAddImage(destination, scaledImage, destinationOptions);
+
+    // write the image
+    NSLog(@"scaled alphaInfo: %u %u %@", alpha, CGImageGetAlphaInfo(scaledImage), destinationOptions); //
     if(!CGImageDestinationFinalize(destination)) {
         NSDictionary* details = @{NSLocalizedDescriptionKey:@"Error writing PNG image"};
         [details setValue:@"ran out of money" forKey:NSLocalizedDescriptionKey];
         *error = [NSError errorWithDomain:@"SSWPNGAdditionsErrorDomain" code:10 userInfo:details];
         result = NO;
     }
+
 exit:
     CGColorSpaceRelease(colorSpace);
     CGContextRelease(cgContext);
     CFRelease(destination);
-    CFRelease(imageOptions);
+    CFRelease(destinationOptions);
     return result;
 }
 
