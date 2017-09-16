@@ -51,7 +51,7 @@
     CGImageDestinationAddImage(destination, scaledImage, destinationOptions);
 
     // write the image
-    NSLog(@"scaled alphaInfo: %u %u %@", alpha, CGImageGetAlphaInfo(scaledImage), destinationOptions); //
+    // NSLog(@"scaled alphaInfo: %u %u %@", alpha, CGImageGetAlphaInfo(scaledImage), destinationOptions);
     if(!CGImageDestinationFinalize(destination)) {
         NSDictionary* details = @{NSLocalizedDescriptionKey:@"Error writing PNG image"};
         [details setValue:@"ran out of money" forKey:NSLocalizedDescriptionKey];
@@ -135,16 +135,17 @@ int main(int argc, const char * argv[])
             ],
 
             @"ios": @[
-                @"29", @"29@2x",            // iPad Settings
+                @"20", @"20@2x", @"20@3x",  // Notificaiton
+                @"29", @"29@2x", @"29@3x",  // Settings
                 @"40", @"40@2x",            // iPad Spotlight
                 @"76", @"76@2x",            // iPad App
                 @"83.5@2x",                 // iPad Pro
                 @"60@2x", @"60@3x",         // iPhone App
-                @"29@3x",                   // iPhone Settings
                 @"40@3x",                   // iPhone Spotlight
                 @"512"                      // iTunes Store
             ],
             @"ios-small": @[
+                @"20", @"20@2x", @"20@3x",  // Notificaitons
                 @"29", @"29@2x", @"29@3x",  // Settings
                 @"40", @"40@2x", @"40@3x"   // Spotlight
             ],
