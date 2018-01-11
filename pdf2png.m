@@ -111,7 +111,6 @@ int main(int argc, const char * argv[])
         }
         */
 
-
         NSDictionary* const targets = @{
             @"android": @[
                 @"512",     // Google Play
@@ -175,6 +174,22 @@ int main(int argc, const char * argv[])
 
             @"retina": @[
                 @"@", @"@2x", @"@3x"
+            ],
+            
+            @"messages-icon": @[ // iMessages App Icon
+                @"1024"
+            ],
+            
+            @"messages-settings": @[ // iMessages App Settings Icon
+                @"29@2x", @"29@3x"
+            ],
+
+            @"messages": @[
+                @"1024x768@2x", @"1024x768@3x", // App Store - 1.3~
+                @"32x24@2x", @"32x24@3x", // Messages - 1.3~
+                @"27x20@2x", @"27x20@3x", // Messages - 1.35
+                @"67x50@2x", // Messages iPad - 1.34
+                @"74x55@2x", // Messages iPad Pro - 1.3454545455
             ]
         };
 
