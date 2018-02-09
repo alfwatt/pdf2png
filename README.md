@@ -3,6 +3,11 @@
 A small command line tool which renders pdf files into png files at various sizes,
 with presets for rendering icons for iOS, MacOS and Android
 
+## sources
+
+    gitlab: https://gitlab.com/alfwatt/pdf2png
+    github: https://github.com/alfwatt/pdf2png
+
 ## usage
 
     usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x50,100@2x,400%] [-a YES|NO]
@@ -14,14 +19,13 @@ with presets for rendering icons for iOS, MacOS and Android
     -t      - a target group, which outputs a set of sizes suitable for icons
     -a      - include alpha channel, YES or NO
     
-  # TODO Options
+### TODO Options
 
-    -b 1,8  - bits per channel
+    -b 1,2,4,8,12  - bits per channel
     -c RGB  - color model GRAY|INDEX|RGB|LAB|CMYK|ETC.
     -v      - version info
     -V      - verbose
     -z      - crush, generate the smallest PNG possible
-    -Z      - crush more
 
 ## sizes
 
@@ -79,7 +83,7 @@ Use the Makefile to install in /usr/local/bin
 
 The MIT License (MIT)
 
-Copyright (c) 2015-2016 Alf Watt
+Copyright (c) 2015-2018 Alf Watt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
