@@ -10,22 +10,23 @@ with presets for rendering icons for iOS, MacOS and Android
 
 ## usage
 
-    usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x50,100@2x,400%] [-a YES|NO]
+    usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x50,100@2x,400%]
         [-t ios|android-small|macos-small|android-large|ios-small|macos|ios-large|android|macos-large|retina]
 
-    -i      - input file name, a PDF
-    -o      - output file prefix, to which the size and .png will be appended
-    -s      - a comma seperated array of output sizes
-    -t      - a target group, which outputs a set of sizes suitable for icons
-    -a      - include alpha channel, YES or NO
+    -i — input file name, a PDF document
+    -o — output file prefix, to which the size and .png will be appended
+    -s — a comma seperated array of output sizes
+    -t - a target group, which outputs a set of sizes suitable for icons
     
 ### TODO Options
 
-    -b 1,2,4,8,12  - bits per channel
-    -c RGB  - color model GRAY|INDEX|RGB|LAB|CMYK|ETC.
-    -v      - version info
-    -V      - verbose
-    -z      - crush, generate the smallest PNG possible
+    -a YES|NO — include alpha channel, YES or NO
+    -b 1|4|8|12 — bits per channel
+    -c GRAY|INDEX|RGB|LAB|CMYK — color model
+    -C x,y,w,h] — crop to rectange 
+    -v - version info]
+    -V - verbose
+    -z — crush, generate the smallest PNG possible
 
 ## sizes
 
@@ -42,7 +43,7 @@ Output sizes can be expressed in a number of formats:
 
 ## example
 
-You have a logo for an application which is square with large and small variants that you want to render for iOS and Android:
+You have a logo for an application which is square, with large and small variants, that you want to render for both iOS and Android:
 
     $ pdf2png -i app-logo-small.pdf -o app-logo -t ios-small
 
@@ -72,7 +73,7 @@ To complete the set you can run:
 Use the Makefile to install in /usr/local/bin
 
     make build
-    make install
+    sudo make install
 
 ## versions
 
