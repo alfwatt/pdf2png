@@ -3,6 +3,13 @@
 A small command line tool which renders pdf files into png files at various sizes,
 with presets for rendering icons for iOS, MacOS and Android
 
+<a id="support"></a>
+## Support pdf2png!
+
+Are you using pdf2png to build your apps? Would you like to help support the project and get a sponsor credit?
+
+Visit our [Patreon Page](https://www.patreon.com/istumblerlabs) and patronize us in exchange for great rewards!
+
 ## sources
 
     gitlab: https://gitlab.com/alfwatt/pdf2png
@@ -12,18 +19,20 @@ with presets for rendering icons for iOS, MacOS and Android
 
     usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x50,100@2x,400%]
         [-t ios|android-small|macos-small|android-large|ios-small|macos|ios-large|android|macos-large|retina]
+        [-A Resources/Catalog.xcassets]
 
     -i — input file name, a PDF document
     -o — output file prefix, to which the size and .png will be appended
     -s — a comma seperated array of output sizes
     -t - a target group, which outputs a set of sizes suitable for icons
+    -A - path to xcassets catalog to add the produced images to
     
 ### TODO Options
 
     -a YES|NO — include alpha channel, YES or NO
     -b 1|4|8|12 — bits per channel
     -c GRAY|INDEX|RGB|LAB|CMYK — color model
-    -C x,y,w,h] — crop to rectange 
+    -C x,y,w,h — crop to rectange 
     -v - version info]
     -V - verbose
     -z — crush, generate the smallest PNG possible
