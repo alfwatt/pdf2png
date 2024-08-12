@@ -13,8 +13,7 @@ Visit our [Patreon Page](https://www.patreon.com/istumblerlabs) and patronize us
 
 ## sources
 
-    gitlab: https://gitlab.com/alfwatt/pdf2png
-    github: https://github.com/alfwatt/pdf2png
+    github: https://github.com/iStumblerLabs/pdf2png
 
 ## usage
 
@@ -92,7 +91,12 @@ Use the Makefile to install in /usr/local/bin
 
 ## versions
 
-- `1.0` — April 2016-ish
+- `1.1.1` - August 2024
+    * Message Plugin Icon Sizes
+    * Notification Icon Sizes
+    * Add version to usage text
+- `1.1` - June 2017
+- `1.0` — April 2016
 
 ## license
 
