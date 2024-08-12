@@ -3,25 +3,26 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <ImageIO/ImageIO.h>
 
-#pragma mark -
+#define PDF2PNG_VERSION "1.1.1"
+#define PDF2PNG_BUILD   "101010.0"
 
-/* http://stackoverflow.com/questions/17507170/how-to-save-png-file-from-nsimage-retina-issues */
-
+/*
+    http://stackoverflow.com/questions/17507170/how-to-save-png-file-from-nsimage-retina-issues
+*/
 @interface NSImage (SSWPNGAdditions)
 
 - (BOOL)writePNGToURL:(NSURL*)URL outputSize:(NSSize)outputSizePx alphaChannel:(BOOL)alpha error:(NSError*__autoreleasing*)error;
 
 @end
 
-#pragma mark -
+// mark: -
 
 @implementation NSImage (SSWPNGAdditions)
 
-- (BOOL)writePNGToURL:(NSURL*)URL outputSize:(NSSize)outputSizePx alphaChannel:(BOOL)alpha error:(NSError*__autoreleasing*)error
-{
+- (BOOL)writePNGToURL:(NSURL*)URL outputSize:(NSSize)outputSizePx alphaChannel:(BOOL)alpha error:(NSError*__autoreleasing*)error {
     BOOL result = YES;
     NSImage* sourceImage = [NSImage imageWithSize:self.size flipped:NO drawingHandler:^BOOL(NSRect dstRect) {
-        [self drawAtPoint:NSMakePoint(0.0, 0.0) fromRect:dstRect operation:NSCompositeSourceOver fraction:1.0];
+        [self drawAtPoint:NSMakePoint(0.0, 0.0) fromRect:dstRect operation:NSCompositingOperationSourceOver fraction:1.0];
         return YES;
     }];
     NSRect proposedRect = NSMakeRect(0.0, 0.0, outputSizePx.width, outputSizePx.height);
@@ -37,7 +38,7 @@
         bitsPerComponent, bytesPerRow, colorSpace,
         (alpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNone));
     NSGraphicsContext* context =
-        [NSGraphicsContext graphicsContextWithGraphicsPort:cgContext flipped:NO];
+    [NSGraphicsContext graphicsContextWithCGContext:cgContext flipped:NO];
 
     // scale the image
     CGImageRef scaledImage =
@@ -69,7 +70,7 @@ exit:
 
 @end
 
-#pragma mark -
+// MARK: - main
 
 enum {
     StatusUnkonwn = -1,
@@ -82,11 +83,9 @@ enum {
     StatusOutputWriteError
 };
 
-int main(int argc, const char * argv[])
-{
+int main(int argc, const char * argv[]) {
     int status = StatusUnkonwn;
-    @autoreleasepool
-    {
+    @autoreleasepool {
         NSFileHandle* stdout = [NSFileHandle fileHandleWithStandardOutput];
         NSDictionary* args = [[NSUserDefaults standardUserDefaults] volatileDomainForName:NSArgumentDomain];
 //        NSLog(@"args: %@", args);
@@ -96,6 +95,7 @@ int main(int argc, const char * argv[])
         NSString* target = [args objectForKey:@"t"];
         NSArray* outputSizes = [[args objectForKey:@"s"] componentsSeparatedByString:@","];
         NSNumber* alphaArg = [args objectForKey:@"a"];
+        NSString* assetCatalog = [args objectForKey:@"A"];
 
         BOOL alphaChannel = YES;
         if (alphaArg) {
@@ -112,6 +112,7 @@ int main(int argc, const char * argv[])
         */
 
         NSDictionary* const targets = @{
+            // Android
             @"android": @[
                 @"512",     // Google Play
                 @"192",     // xxxhdpi
@@ -132,7 +133,7 @@ int main(int argc, const char * argv[])
                 @"144",     // xxhdpi
                 @"96"       // xhdpi
             ],
-
+            // iOS
             @"ios": @[
                 @"20", @"20@2x", @"20@3x",  // Notificaiton
                 @"29", @"29@2x", @"29@3x",  // Settings
@@ -154,7 +155,7 @@ int main(int argc, const char * argv[])
                 @"60@2x", @"60@3x",         // iPhone App
                 @"512"                      // iTunes Store
             ],
-
+            // macOS
             @"macos": @[
                 @"16", @"16@2x",
                 @"32", @"32@2x",
@@ -171,11 +172,7 @@ int main(int argc, const char * argv[])
                 @"256", @"256@2x",
                 @"512", @"512@2x"
             ],
-
-            @"retina": @[
-                @"@", @"@2x", @"@3x"
-            ],
-            
+            // Messages
             @"messages-icon": @[ // iMessages App Icon
                 @"1024"
             ],
@@ -190,6 +187,10 @@ int main(int argc, const char * argv[])
                 @"27x20@2x", @"27x20@3x", // Messages - 1.35
                 @"67x50@2x", // Messages iPad - 1.34
                 @"74x55@2x", // Messages iPad Pro - 1.3454545455
+            ],
+            // Retina sizes
+            @"retina": @[
+                @"@", @"@2x", @"@3x"
             ]
         };
 
@@ -211,31 +212,54 @@ int main(int argc, const char * argv[])
             outputSizes = @[@"@"];
         }
 
-        if (!outputFilePrefix) { // infer it from the inputFileName
-            outputFilePrefix = [[inputFileName lastPathComponent] stringByDeletingPathExtension];
-        }
-        
         if (!inputFileName || !outputSizes) {
             NSString* usage = [NSString stringWithFormat:
-                @"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%] [-a YES|NO] \n\t[-t %@]\n",
-                [[targets.allKeys sortedArrayUsingSelector:@selector(compare:)] componentsJoinedByString:@"|"]];
+                @"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%] [-a YES|NO] \n\t[-t %@]\nVersion %@ - %@\n",
+                [[targets.allKeys sortedArrayUsingSelector:@selector(compare:)] componentsJoinedByString:@"|"], @PDF2PNG_VERSION, @PDF2PNG_BUILD];
             [stdout writeData:[usage dataUsingEncoding:NSUTF8StringEncoding]];
             status = StatusMissingArguments;
             goto exit;
         }
                 
-        if (![[NSFileManager defaultManager] fileExistsAtPath:inputFileName isDirectory:nil]) {
+        if (![NSFileManager.defaultManager fileExistsAtPath:inputFileName isDirectory:nil]) {
             status = StatusInputFileNotFound;
             NSLog(@"Error %i: input file not found: %@", status, inputFileName);
             goto exit;
         }
         
         // create a target NSImage at each of the specified sizes
-        NSImage* icon = [[NSImage alloc] initByReferencingFile:inputFileName];
+        NSImage* icon = [NSImage.alloc initByReferencingFile:inputFileName];
         if (!icon) {
             status = StatusInputFileNotAnImage;
             NSLog(@"Error %i: image did not load from: %@", status, inputFileName);
             goto exit;
+        }
+        
+        // now that we know we can read the check to see if we're writinng into an asset catalog
+        if (assetCatalog) {
+            outputFilePrefix = [[assetCatalog stringByAppendingPathComponent:outputFilePrefix] stringByAppendingPathExtension:@"imageset"];
+            NSURL* iamgesetURL = [NSURL fileURLWithPath:outputFilePrefix]; // resolved relative to working directory
+            BOOL isDirectory = NO;
+            NSError* createError = nil;
+            
+            if ([NSFileManager.defaultManager fileExistsAtPath:iamgesetURL.path isDirectory:&isDirectory]) {
+                if (!isDirectory) { // strange condtion, exit
+                    status = -420;
+                    NSLog(@"ERROR %i: iamgeset exists but is not a directory: %@", status, outputFilePrefix);
+                    goto exit;
+                }
+            }
+            else { // need to create the imageset
+                if (![NSFileManager.defaultManager createDirectoryAtPath:iamgesetURL.path withIntermediateDirectories:YES attributes:nil error:&createError]) {
+                    status = -421;
+                    NSLog(@"Error %i: cannot create imageset: %@", status, iamgesetURL.path);
+                    goto exit;
+                }
+            }
+        }
+        
+        if (!outputFilePrefix) { // infer it from the inputFileName if neither -o or -A were specified
+            outputFilePrefix = inputFileName.lastPathComponent.stringByDeletingPathExtension;
         }
         
         // write the target NSImage to the output-file-prefix specified
@@ -253,14 +277,14 @@ int main(int argc, const char * argv[])
             else if ([sizeString rangeOfString:@"@"].location == 0) { // multiply the existing size
                 isRetina = YES;
                 retinaSize = [sizeString substringFromIndex:1];
-                CGFloat retina = [[retinaSize substringToIndex:(retinaSize.length - 1)] doubleValue];
+                CGFloat retina = [retinaSize substringToIndex:(retinaSize.length - 1)].doubleValue;
                 outputSize = NSMakeSize(pointSize.width * retina, pointSize.height * retina);
             }
             else if ([sizeString rangeOfString:@"@"].location != NSNotFound) {
                 NSArray* sizeComponents = [sizeString componentsSeparatedByString:@"@"];
                 retinaSize = sizeComponents[1]; // "2x" for the file name
                 CGFloat pixels = [sizeComponents[0] doubleValue];
-                CGFloat retina = [[retinaSize substringToIndex:(retinaSize.length - 1)] doubleValue];
+                CGFloat retina = [retinaSize substringToIndex:(retinaSize.length - 1)].doubleValue;
                 CGFloat retinaPixels = pixels * retina;
                 pointSize = NSMakeSize( pixels, pixels);
                 outputSize = NSMakeSize( retinaPixels, retinaPixels);
@@ -276,22 +300,22 @@ int main(int argc, const char * argv[])
             }
             else if ([sizeString rangeOfString:@"%"].location == (sizeString.length - 1)) { // only at the end of the string
                 NSString* percentString = [sizeString substringToIndex:(sizeString.length - 2)];
-                CGFloat percentSize = ([percentString doubleValue] / 10);
+                CGFloat percentSize = (percentString.doubleValue / 10);
                 outputSize = NSMakeSize((icon.size.width * percentSize), (icon.size.height * percentSize));
                 pointSize = outputSize;
             }
             else if ([sizeString rangeOfString:@"h"].location == (sizeString.length - 1)) { // fixed height
-                NSString* widthString = [sizeString substringToIndex:(sizeString.length - 2)];
-                CGFloat fixedWidth = [widthString doubleValue];
-                CGFloat scaleFactor = (icon.size.width / fixedWidth);
-                outputSize = NSMakeSize(fixedWidth, (icon.size.height * scaleFactor));
+                NSString* heightString = [sizeString substringToIndex:(sizeString.length - 2)];
+                CGFloat fixedHeight = heightString.doubleValue;
+                CGFloat scaleFactor = (icon.size.height / fixedHeight);
+                outputSize = NSMakeSize((icon.size.width * scaleFactor), fixedHeight);
                 pointSize = outputSize;
             }
             else if ([sizeString rangeOfString:@"w"].location == (sizeString.length - 1)) { // fixed width
-                NSString* heightString = [sizeString substringToIndex:(sizeString.length - 2)];
-                CGFloat fixedHeight = [heightString doubleValue];
-                CGFloat scaleFactor = (icon.size.height / fixedHeight);
-                outputSize = NSMakeSize((icon.size.width * scaleFactor), fixedHeight);
+                NSString* widthString = [sizeString substringToIndex:(sizeString.length - 2)];
+                CGFloat fixedWidth = widthString.doubleValue;
+                CGFloat scaleFactor = (icon.size.width / fixedWidth);
+                outputSize = NSMakeSize(fixedWidth, (icon.size.height * scaleFactor));
                 pointSize = outputSize;
             }
             else { // it's a simple square size
@@ -320,6 +344,7 @@ int main(int argc, const char * argv[])
                 outputFileName = [outputFileName stringByAppendingString:@"@"];
                 outputFileName = [outputFileName stringByAppendingString:retinaSize];
             }
+            
             outputFileName = [outputFileName stringByAppendingPathExtension:@"png"];
             [icon writePNGToURL:[NSURL fileURLWithPath:outputFileName] outputSize:outputSize alphaChannel:alphaChannel error:&error];
             
@@ -331,6 +356,9 @@ int main(int argc, const char * argv[])
 
             [stdout writeData:[[NSString stringWithFormat:@"pdf2png wrote [%.0f x %.0f] pixels to %@\n",
                 outputSize.width, outputSize.height, outputFileName] dataUsingEncoding:NSUTF8StringEncoding]];
+        }
+        
+        if (assetCatalog) { // we need to update the plist in the catalog
         }
     }
 
