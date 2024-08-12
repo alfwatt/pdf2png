@@ -99,7 +99,7 @@ int main(int argc, const char * argv[]) {
 
         BOOL alphaChannel = YES;
         if (alphaArg) {
-            alphaChannel = [alphaArg boolValue];
+            alphaChannel = alphaArg.boolValue;
         }
 
         /*
