@@ -142,7 +142,7 @@ int main(int argc, const char * argv[]) {
                 @"83.5@2x",                 // iPad Pro
                 @"60@2x", @"60@3x",         // iPhone App
                 @"40@3x",                   // iPhone Spotlight
-                @"512"                      // iTunes Store
+                @"1024"                     // iTunes Store
             ],
             @"ios-small": @[
                 @"20", @"20@2x", @"20@3x",  // Notificaitons
@@ -153,7 +153,7 @@ int main(int argc, const char * argv[]) {
                 @"76", @"76@2x",            // iPad App
                 @"83.5@2x",                 // iPad Pro
                 @"60@2x", @"60@3x",         // iPhone App
-                @"512"                      // iTunes Store
+                @"1024"                     // iTunes Store
             ],
             // macOS
             @"macos": @[
