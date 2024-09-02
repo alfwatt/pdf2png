@@ -31,23 +31,33 @@
     unsigned bytesPerRow = proposedRect.size.width * (components * (bitsPerComponent / BYTE_SIZE));
     CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
 
-    // seutp the context
-    NSDictionary* contextHints = @{(id)kCGImagePropertyHasAlpha: @(alpha)};
     CGContextRef cgContext = CGBitmapContextCreate(
         NULL, proposedRect.size.width, proposedRect.size.height,
         bitsPerComponent, bytesPerRow, colorSpace,
         (alpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNone));
-    NSGraphicsContext* context =
-    [NSGraphicsContext graphicsContextWithCGContext:cgContext flipped:NO];
+    NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithCGContext:cgContext flipped:NO];
+
+    if (proposedRect.size.width != outputSizePx.width) {
+        NSLog(@"WARNING proposedRect.size: %@ != outputSizePx %@", NSStringFromSize(proposedRect.size), NSStringFromSize(outputSizePx));
+    }
 
     // scale the image
-    CGImageRef scaledImage =
-        [sourceImage CGImageForProposedRect:&proposedRect context:context hints:contextHints];
+    CGImageRef scaledImage = [sourceImage CGImageForProposedRect:&proposedRect context:context hints:@{
+        NSImageHintCTM: NSAffineTransform.transform
+    }];
+    NSSize scaledSize = NSMakeSize(CGImageGetWidth(scaledImage), CGImageGetHeight(scaledImage));
 
+    if (scaledSize.width != outputSizePx.width) {
+        NSLog(@"WARNING scaledSize: %@ != outputSizePx %@", NSStringFromSize(scaledSize), NSStringFromSize(outputSizePx));
+    }
+    
     // setup the destination
-    CGImageDestinationRef destination =
-        CGImageDestinationCreateWithURL((__bridge CFURLRef)(URL), kUTTypePNG, 1, NULL);
-    CFDictionaryRef destinationOptions = CFBridgingRetain(contextHints);
+    NSDictionary* options = @{
+        (id)kCGImagePropertyHasAlpha: @(alpha)
+    };
+
+    CGImageDestinationRef destination = CGImageDestinationCreateWithURL((__bridge CFURLRef)(URL), kUTTypePNG, 1, NULL);
+    CFDictionaryRef destinationOptions = CFBridgingRetain(options);
     CGImageDestinationSetProperties(destination, destinationOptions);
     CGImageDestinationAddImage(destination, scaledImage, destinationOptions);
 
@@ -100,6 +110,9 @@ int main(int argc, const char * argv[]) {
         BOOL alphaChannel = YES;
         if (alphaArg) {
             alphaChannel = alphaArg.boolValue;
+        }
+        else if (target && [target rangeOfString:@"ios" options:NSAnchoredSearch].location != NSNotFound) { // iOS icons can't have an alpha channel
+            alphaChannel = NO;
         }
 
         /*
