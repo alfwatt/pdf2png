@@ -47,3 +47,8 @@ $(PACKED_PRODUCT): $(BUILT_PRODUCT)
 pack-port: $(PACKED_PRODUCT)
 	$(LS) $(PACKED_PRODUCT)
 	$(ZIP_LS) $(PACKED_PRODUCT)
+
+.PHONY: alpha-test
+alpha-test: all
+	$(BUILD_DIR)/$(CONFIGURATION)/$(TARGET) -a NO -i Artwork/Icon.pdf -o $(BUILD_DIR)/Icon_No_Alpha -s @,@2x,@3x
+	$(BUILD_DIR)/$(CONFIGURATION)/$(TARGET) -a YES -i Artwork/Icon.pdf -o $(BUILD_DIR)/Icon_Alpha -s @,@2x,@3x
