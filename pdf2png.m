@@ -3,8 +3,7 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <ImageIO/ImageIO.h>
 
-#define PDF2PNG_VERSION "1.1.1"
-#define PDF2PNG_BUILD   "101010.0"
+#define PDF2PNG_VERSION "1.1.2"
 
 /*
     http://stackoverflow.com/questions/17507170/how-to-save-png-file-from-nsimage-retina-issues
@@ -52,12 +51,8 @@
     }
     
     // setup the destination
-    NSDictionary* options = @{
-        (id)kCGImagePropertyHasAlpha: @(alpha)
-    };
-
     CGImageDestinationRef destination = CGImageDestinationCreateWithURL((__bridge CFURLRef)(URL), kUTTypePNG, 1, NULL);
-    CFDictionaryRef destinationOptions = CFBridgingRetain(options);
+    CFDictionaryRef destinationOptions = CFBridgingRetain(@{ (id)kCGImagePropertyHasAlpha: @(alpha) });
     CGImageDestinationSetProperties(destination, destinationOptions);
     CGImageDestinationAddImage(destination, scaledImage, destinationOptions);
 
@@ -225,8 +220,8 @@ int main(int argc, const char * argv[]) {
 
         if (!inputFileName || !outputSizes) {
             NSString* usage = [NSString stringWithFormat:
-                @"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%] [-a YES|NO] \n\t[-t %@]\nVersion %@ - %@\n",
-                [[targets.allKeys sortedArrayUsingSelector:@selector(compare:)] componentsJoinedByString:@"|"], @PDF2PNG_VERSION, @PDF2PNG_BUILD];
+                @"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%] [-a YES|NO] \n\t[-t %@]\nVersion %@\n",
+                [[targets.allKeys sortedArrayUsingSelector:@selector(compare:)] componentsJoinedByString:@"|"], @PDF2PNG_VERSION];
             [NSFileHandle.fileHandleWithStandardOutput writeData:[usage dataUsingEncoding:NSUTF8StringEncoding]];
             status = StatusMissingArguments;
             goto exit;
