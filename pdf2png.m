@@ -64,8 +64,7 @@
     // write the image
     // NSLog(@"scaled alphaInfo: %u %u %@", alpha, CGImageGetAlphaInfo(scaledImage), destinationOptions);
     if(!CGImageDestinationFinalize(destination)) {
-        NSDictionary* details = @{NSLocalizedDescriptionKey:@"Error writing PNG image"};
-        [details setValue:@"ran out of money" forKey:NSLocalizedDescriptionKey];
+        NSDictionary* details = @{ NSLocalizedDescriptionKey: [NSString stringWithFormat:@"Error writing PNG to: %@", URL] };
         *error = [NSError errorWithDomain:@"SSWPNGAdditionsErrorDomain" code:10 userInfo:details];
         result = NO;
     }
@@ -96,8 +95,7 @@ enum {
 int main(int argc, const char * argv[]) {
     int status = StatusUnkonwn;
     @autoreleasepool {
-        NSFileHandle* stdout = [NSFileHandle fileHandleWithStandardOutput];
-        NSDictionary* args = [[NSUserDefaults standardUserDefaults] volatileDomainForName:NSArgumentDomain];
+        NSDictionary* args = [NSUserDefaults.standardUserDefaults volatileDomainForName:NSArgumentDomain];
 //        NSLog(@"args: %@", args);
         
         NSString* inputFileName = [args objectForKey:@"i"];
@@ -229,7 +227,7 @@ int main(int argc, const char * argv[]) {
             NSString* usage = [NSString stringWithFormat:
                 @"usage: pdf2png -i <input.pdf> [-o <output-file-prefix>] [-s @,@2x,50,100x100,100@2x,400%%] [-a YES|NO] \n\t[-t %@]\nVersion %@ - %@\n",
                 [[targets.allKeys sortedArrayUsingSelector:@selector(compare:)] componentsJoinedByString:@"|"], @PDF2PNG_VERSION, @PDF2PNG_BUILD];
-            [stdout writeData:[usage dataUsingEncoding:NSUTF8StringEncoding]];
+            [NSFileHandle.fileHandleWithStandardOutput writeData:[usage dataUsingEncoding:NSUTF8StringEncoding]];
             status = StatusMissingArguments;
             goto exit;
         }
@@ -248,7 +246,7 @@ int main(int argc, const char * argv[]) {
             goto exit;
         }
         
-        // now that we know we can read the check to see if we're writinng into an asset catalog
+        // now that we know we can read the check to see if we're writing into an asset catalog
         if (assetCatalog) {
             outputFilePrefix = [[assetCatalog stringByAppendingPathComponent:outputFilePrefix] stringByAppendingPathExtension:@"imageset"];
             NSURL* iamgesetURL = [NSURL fileURLWithPath:outputFilePrefix]; // resolved relative to working directory
@@ -332,7 +330,7 @@ int main(int argc, const char * argv[]) {
                 pointSize = outputSize;
             }
             else { // it's a simple square size
-                CGFloat size = [sizeString doubleValue];
+                CGFloat size = sizeString.doubleValue;
                 pointSize = NSMakeSize(size, size);
                 outputSize = NSMakeSize(size, size);
             }
@@ -367,7 +365,7 @@ int main(int argc, const char * argv[]) {
                 goto exit;
             }
 
-            [stdout writeData:[[NSString stringWithFormat:@"pdf2png wrote [%.0f x %.0f] pixels to %@\n",
+            [NSFileHandle.fileHandleWithStandardOutput writeData:[[NSString stringWithFormat:@"pdf2png wrote [%.0f x %.0f] pixels to %@\n",
                 outputSize.width, outputSize.height, outputFileName] dataUsingEncoding:NSUTF8StringEncoding]];
         }
         
