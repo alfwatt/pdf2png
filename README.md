@@ -13,7 +13,7 @@ Visit our [Patreon Page](https://www.patreon.com/istumblerlabs) and patronize us
 
 ## sources
 
-    github: https://github.com/iStumblerLabs/pdf2png
+    github: https://github.com/alfwatt/pdf2png
 
 ## usage
 
